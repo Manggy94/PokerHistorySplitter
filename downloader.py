@@ -1,5 +1,6 @@
 import boto3
 import os
+from functools import cached_property
 
 from dotenv import load_dotenv
 
@@ -12,8 +13,6 @@ class S3Downloader:
     """
 
     def __init__(self):
-        self.summaries = None
-        self.raw_histories = None
         self.s3 = boto3.resource(
             's3',
             region_name=os.environ.get("DO_REGION"),
@@ -21,61 +20,79 @@ class S3Downloader:
             aws_access_key_id=os.environ.get("AWS_ACCESS_KEY_ID"),
             aws_secret_access_key=os.environ.get("AWS_SECRET_ACCESS_KEY")
         )
-        self.raw_histories_list = self.list_raw_history_keys()
-        self.summaries_list = self.list_summary_keys()
+        self.bucket = self.s3.Bucket("manggy-poker")
+        self.summaries = None
+        self.raw_histories = None
 
-    def objects_iterator(self, bucket_name: str = "manggy-poker"):
+    @cached_property
+    def objects_iterator(self):
         """
         Returns an iterator over all objects in the bucket
         """
-        bucket = self.s3.Bucket(bucket_name)
-        return bucket.objects.all()
+        return self.bucket.objects.all()
 
-    def list_objects(self, bucket_name: str = "manggy-poker"):
+    @cached_property
+    def list_objects(self):
         """
         Returns a list of all objects in the bucket
         """
-        it = self.objects_iterator(bucket_name)
-        return list(it)
+        return list(self.objects_iterator)
 
-    def list_summaries(self, bucket_name: str = "manggy-poker"):
+    @cached_property
+    def summaries_list(self) -> list:
         """
         Returns a list of all summaries in the bucket
         """
-        bucket = self.s3.Bucket(bucket_name)
-        summ = bucket.objects.filter(Prefix="data/summaries/")
-        return list(summ)
+        return list(self.bucket.objects.filter(Prefix="data/summaries/"))
 
-    def list_summary_keys(self, bucket_name: str = "manggy-poker"):
+    def list_summaries_by_year(self, year) -> list:
+        """
+        Returns a list of all summaries in the bucket
+        """
+        return list(self.bucket.objects.filter(Prefix=f"data/summaries/{year}"))
+
+    def list_summaries_by_month_of_year(self, year, month) -> list:
+        """"""
+        return list(self.bucket.objects.filter(Prefix=f"data/summaries/{year}/{month:02}"))
+
+    @property
+    def summaries_key_list(self) -> list:
         """
         Returns a list of all summaries keys in the bucket
         """
-        summ = self.list_summaries(bucket_name)
-        return [s.key for s in summ]
+        return [s.key for s in self.summaries_list]
 
-    def get_summaries(self, bucket_name: str = "manggy-poker"):
+    @cached_property
+    def get_summaries(self):
         """
         Returns a list of all summary objects in the bucket
         """
-        bucket = self.s3.Bucket(bucket_name)
-        pseudo_summaries = bucket.objects.filter(Prefix="data/summaries/")
-        summ = [s.get() for s in pseudo_summaries]
-        return list(summ)
+        return [s.get() for s in self.summaries_list]
 
-    def list_raw_histories(self, bucket_name: str = "manggy-poker"):
+    def get_summaries_by_year(self, year):
+        """
+        Returns a list of all summary objects in the bucket
+        """
+        return [s.get() for s in self.list_summaries_by_year(year)]
+
+    def get_summaries_by_month_of_year(self, year, month):
+        """
+        Returns a list of all summary objects in the bucket
+        """
+        return [s.get() for s in self.list_summaries_by_month_of_year(year, month)]
+
+    @property
+    def raw_histories_list(self):
         """
         Returns a list of all raw histories in the bucket
         """
-        bucket = self.s3.Bucket(bucket_name)
-        hist = bucket.objects.filter(Prefix="data/histories/raw/")
-        return list(hist)
+        return list(self.bucket.objects.filter(Prefix="data/histories/raw/"))
 
-    def list_raw_history_keys(self, bucket_name: str = "manggy-poker"):
+    def list_raw_history_keys(self):
         """
         Returns a list of all raw histories keys in the bucket
         """
-        hist = self.list_raw_histories(bucket_name)
-        return [h.key for h in hist]
+        return [h.key for h in self.raw_histories_list]
 
     def get_raw_histories(self, bucket_name: str = "manggy-poker"):
         """
@@ -85,14 +102,14 @@ class S3Downloader:
         pseudo_histories = bucket.objects.filter(Prefix="data/histories/raw/")
         histories = [h.get() for h in pseudo_histories]
         return list(histories)
-    
+
     def load_raw_histories(self):
         """
         Loads all raw history objects into memory
         :return: 
         """
         self.raw_histories = self.get_raw_histories()
-        
+
     def load_summaries(self):
         """
         Loads all summary objects into memory
