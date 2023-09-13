@@ -21,8 +21,6 @@ class S3Downloader:
             aws_secret_access_key=os.environ.get("AWS_SECRET_ACCESS_KEY")
         )
         self.bucket = self.s3.Bucket("manggy-poker")
-        self.summaries = None
-        self.raw_histories = None
 
     @cached_property
     def objects_iterator(self):
@@ -81,38 +79,46 @@ class S3Downloader:
         """
         return [s.get() for s in self.list_summaries_by_month_of_year(year, month)]
 
-    @property
+    @cached_property
     def raw_histories_list(self):
         """
         Returns a list of all raw histories in the bucket
         """
         return list(self.bucket.objects.filter(Prefix="data/histories/raw/"))
 
-    def list_raw_history_keys(self):
+    def list_raw_histories_by_year(self, year) -> list:
+        """
+        Returns a list of all histories in the bucket
+        """
+        return list(self.bucket.objects.filter(Prefix=f"data/histories/raw/{year}"))
+
+    def list_raw_histories_by_month_of_year(self, year, month) -> list:
+        """"""
+        return list(self.bucket.objects.filter(Prefix=f"data/histories/raw/{year}/{month:02}"))
+
+    @cached_property
+    def raw_histories_keys_list(self):
         """
         Returns a list of all raw histories keys in the bucket
         """
         return [h.key for h in self.raw_histories_list]
 
-    def get_raw_histories(self, bucket_name: str = "manggy-poker"):
+    @cached_property
+    def get_raw_histories(self):
         """
         Returns a list of all raw history objects in the bucket
         """
-        bucket = self.s3.Bucket(bucket_name)
-        pseudo_histories = bucket.objects.filter(Prefix="data/histories/raw/")
-        histories = [h.get() for h in pseudo_histories]
-        return list(histories)
+        return [h.get() for h in self.raw_histories_list]
 
-    def load_raw_histories(self):
-        """
-        Loads all raw history objects into memory
-        :return: 
-        """
-        self.raw_histories = self.get_raw_histories()
 
-    def load_summaries(self):
+    def get_raw_histories_by_year(self, year):
         """
-        Loads all summary objects into memory
-        :return: 
+        Returns a list of  raw history objects in the bucket for a certain year
         """
-        self.summaries = self.get_summaries()
+        return [h.get() for h in self.list_raw_histories_by_year(year)]
+
+    def get_raw_histories_by_month_of_year(self, year, month):
+        """
+        Returns a list of  raw history objects in the bucket for a certain month of year
+        """
+        return [h.get() for h in self.list_raw_histories_by_month_of_year(year, month)]
