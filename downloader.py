@@ -159,11 +159,11 @@ class S3Downloader:
         """"""
         return list(self.bucket.objects.filter(Prefix=f"data/histories/raw/{year}/{month:02}"))
 
-    def list_raw_histories_keys_by_year_of_month(self, year, month):
+    def list_raw_histories_keys_by_month_of_year(self, year, month):
         """
         Returns a list of  raw history objects in the bucket for a certain year
         """
-        return [h.key for h in self.list_raw_histories_keys_by_year_of_month(year, month)]
+        return [h.key for h in self.list_raw_histories_by_month_of_year(year, month)]
 
     @cached_property
     def raw_histories_keys_list(self):
@@ -210,7 +210,18 @@ class S3Downloader:
         """
         Returns a list of  raw history objects in the bucket for a certain month of year
         """
-        return [h.get() for h in self.list_raw_histories_by_month_of_year(year, month)]
+        threads = []
+        result_queue = queue.Queue()
+        for key in self.list_raw_histories_keys_by_month_of_year(year, month):
+            thread = threading.Thread(target=self.threaded_get_object, args=(key, result_queue))
+            thread.start()
+            threads.append(thread)
+        for thread in threads:
+            thread.join()
+        raw_histories = []
+        while not result_queue.empty():
+            raw_histories.append(result_queue.get())
+        return raw_histories
 
     def threaded_get_raw_histories_by_month_of_year(self, year, month, result_queue):
         result = self.get_raw_histories_by_month_of_year(year, month)
