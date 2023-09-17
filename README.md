@@ -43,11 +43,11 @@ python app.py
 - `splitter.py` : Contient la classe `FileSplitter` pour diviser des fichiers d'historique brut et les uploader vers S3.
 - `requirements.txt` : Liste des dépendances nécessaires à l'exécution du projet.
 
-### Suggestions
-
-1. Organisez votre code en packages ou modules pour une meilleure lisibilité.
-2. Assurez-vous d'avoir une gestion d'erreur robuste, en particulier lors de l'interaction avec des services externes comme S3.
-3. Ajoutez des commentaires et une documentation détaillée pour chaque fonction ou classe.
 
 ---
 
+### License
+
+MIT License (MIT).
+
+Copyright (c) 2023 Alexandre MANGWA

@@ -1,5 +1,5 @@
 import re
-from downloader import S3Downloader, threading
+from pkrhistorysplitter.downloader import S3Downloader, threading
 from io import BytesIO
 import datetime
 
