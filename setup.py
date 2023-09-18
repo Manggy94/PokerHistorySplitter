@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 install_requires = [
     "boto3",
-    "pythondotenv"
+    "python-dotenv"
     ]
 
 classifiers = [
@@ -20,7 +20,7 @@ classifiers = [
 
 setup(
     name="pkrhistorysplitter",
-    version="0.0.1",
+    version="0.0.2",
     description="A Poker Package to split poker history files in DO S3 bucket",
     long_description=Path("README.md").read_text(),
     long_description_content_type='text/markdown',
