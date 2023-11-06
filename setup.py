@@ -1,5 +1,6 @@
 from pathlib import Path
 from setuptools import setup, find_packages
+import json
 
 install_requires = [
     "boto3",
@@ -17,6 +18,13 @@ classifiers = [
     "Topic :: Games/Entertainment",
     "Topic :: Games/Entertainment :: Board Games"
 ]
+
+
+def get_version():
+    with open("version.json", "r") as f:
+        version = json.load(f)
+        return f"{version['major']}.{version['minor']}.{version['patch']}"
+
 
 setup(
     name="pkrhistorysplitter",
