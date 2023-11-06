@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source venv/bin/activate
+
 # Définir le chemin du fichier de version
 VERSION_FILE="version.json"
 
@@ -7,6 +9,22 @@ VERSION_FILE="version.json"
 if [ ! -f "$VERSION_FILE" ]; then
   echo "Le fichier de version '$VERSION_FILE' n'existe pas. Assurez-vous qu'il existe avant de continuer."
   exit 1
+fi
+
+# Vérifier si le paquet 'wheel' est installé
+if  ! pip list | grep -q wheel ; then
+    echo "Le paquet 'wheel' n'est pas installé. Installation en cours..."
+    pip install wheel
+else
+    echo "Le paquet 'wheel' est déjà installé."
+fi
+
+# Vérifier si le paquet 'twine' est installé
+if  ! pip list | grep -q twine ; then
+    echo "Le paquet 'twine' n'est pas installé. Installation en cours..."
+    pip install twine
+else
+    echo "Le paquet 'twine' est déjà installé."
 fi
 
 # Lire le fichier de version
