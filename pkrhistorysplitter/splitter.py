@@ -15,7 +15,8 @@ class FileSplitter:
 
         self.downloader = S3Downloader()
 
-    def get_text(self, object_summary):
+    @staticmethod
+    def get_text(object_summary):
         """
         Returns the text of a raw hand history or summary file
         :param object_summary: S3 object summary
@@ -53,9 +54,6 @@ class FileSplitter:
         except AttributeError:
             raise AttributeError
 
-
-
-
     def get_hand_id(self, hand: str):
         """
         Gets the hand id from a hand txt in list of hands
@@ -84,8 +82,7 @@ class FileSplitter:
             self.separate_hands(hands_raw_list, prefix_path)
         except AttributeError:
             tournament_id = history_object.get("Metadata").get("tournament-id")
-            print(f"Probleme de type Attribute Error sur le tournoi main {tournament_id}")
-            pass
+            print(f"Problème de type Attribute Error sur le tournoi main {tournament_id}")
 
     def divide_raw_history_files(self, history_objects):
         """
@@ -93,7 +90,6 @@ class FileSplitter:
         """
         for history_object in history_objects:
             self.divide_raw_history_file(history_object)
-
 
     def divide_all_raw_history_files(self):
         """
@@ -103,3 +99,11 @@ class FileSplitter:
             print(f"Dividing raw history files for year {year}")
             raw_histories = self.downloader.get_raw_histories_by_year(year)
             self.divide_raw_history_files(raw_histories)
+
+    def divide_today_history_files(self):
+        """
+        Divides today's raw history files into separate hand history files and uploads them to the bucket in split histories
+        """
+        print("Dividing today's raw history files")
+        raw_histories = [history.get() for history in self.downloader.list_today_raw_histories()]
+        self.divide_raw_history_files(raw_histories)

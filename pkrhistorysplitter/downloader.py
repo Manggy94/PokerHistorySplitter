@@ -1,5 +1,5 @@
 import queue
-
+import datetime
 import boto3
 import os
 import threading
@@ -32,7 +32,7 @@ class S3Downloader:
         return self.bucket.objects.all()
 
     @cached_property
-    def list_objects(self):
+    def list_objects(self) -> list:
         """
         Returns a list of all objects in the bucket
         """
@@ -62,31 +62,30 @@ class S3Downloader:
         """
         return [s.key for s in self.summaries_list]
 
-    def list_summaries_by_year(self, year) -> list:
+    def list_summaries_by_year(self, year: int) -> list:
         """
         Returns a list of all summaries in the bucket
         """
         return list(self.bucket.objects.filter(Prefix=f"data/summaries/{year}"))
 
-    def list_summaries_keys_by_year(self, year):
+    def list_summaries_keys_by_year(self, year: int) -> list:
         """
         Returns a list of  summary objects in the bucket for a certain year
         """
         return [s.key for s in self.list_summaries_by_year(year)]
 
-    def list_summaries_by_month_of_year(self, year, month) -> list:
+    def list_summaries_by_month_of_year(self, year: int, month: int) -> list:
         """"""
-        return list(self.bucket.objects.filter(Prefix=f"data/summaries/{year}/{month:02}"))
+        return list(self.bucket.objects.filter(Prefix=f"data/summaries/{year:04}/{month:02}"))
 
-    def list_summaries_keys_by_year_of_month(self, year, month):
+    def list_summaries_keys_by_month_of_year(self, year: int, month: int) -> list:
         """
         Returns a list of  summary objects in the bucket for a certain year
         """
-        return [s.key for s in self.list_summaries_by_year_of_month(year, month)]
-
+        return [s.key for s in self.list_summaries_by_month_of_year(year=year, month=month)]
 
     @cached_property
-    def get_summaries(self):
+    def get_summaries(self) -> list:
         """
         Returns a list of all summary objects in the bucket
         """
@@ -102,7 +101,8 @@ class S3Downloader:
         while not result_queue.empty():
             summaries.append(result_queue.get())
         return summaries
-    def get_summaries_by_year(self, year):
+
+    def get_summaries_by_year(self, year: int) -> list:
         """
         Returns a list of all summary objects in the bucket
         """
@@ -119,13 +119,13 @@ class S3Downloader:
             summaries.append(result_queue.get())
         return summaries
 
-    def get_summaries_by_month_of_year(self, year, month):
+    def get_summaries_by_month_of_year(self, year: int, month: int) -> list:
         """
         Returns a list of all summary objects in the bucket
         """
         threads = []
         result_queue = queue.Queue()
-        for key in self.list_summaries_keys_by_year_of_month(year, month):
+        for key in self.list_summaries_keys_by_month_of_year(year, month):
             thread = threading.Thread(target=self.threaded_get_object, args=(key, result_queue))
             thread.start()
             threads.append(thread)
@@ -137,7 +137,7 @@ class S3Downloader:
         return summaries
 
     @cached_property
-    def raw_histories_list(self):
+    def raw_histories_list(self) -> list:
         """
         Returns a list of all raw histories in the bucket
         """
@@ -149,31 +149,44 @@ class S3Downloader:
         """
         return list(self.bucket.objects.filter(Prefix=f"data/histories/raw/{year}"))
 
-    def list_raw_histories_keys_by_year(self, year):
+    def list_raw_histories_keys_by_year(self, year: int) -> list:
         """
         Returns a list of  raw history objects in the bucket for a certain year
         """
         return [h.key for h in self.list_raw_histories_by_year(year)]
 
-    def list_raw_histories_by_month_of_year(self, year, month) -> list:
+    def list_raw_histories_by_month_of_year(self, year: int, month: int) -> list:
         """"""
-        return list(self.bucket.objects.filter(Prefix=f"data/histories/raw/{year}/{month:02}"))
+        return list(self.bucket.objects.filter(Prefix=f"data/histories/raw/{year:04}/{month:02}"))
 
-    def list_raw_histories_keys_by_month_of_year(self, year, month):
+    def list_raw_histories_keys_by_month_of_year(self, year: int, month: int) -> list:
         """
         Returns a list of  raw history objects in the bucket for a certain year
         """
         return [h.key for h in self.list_raw_histories_by_month_of_year(year, month)]
 
+    def list_today_raw_histories(self) -> list:
+        """
+        Returns a list of all histories in the bucket
+        """
+        date = datetime.date.today()
+        return list(self.bucket.objects.filter(Prefix=f"data/histories/raw/{date.year}/{date.month:02}/{date.day:02}"))
+
+    def list_today_raw_histories_keys(self) -> list:
+        """
+        Returns a list of  raw history objects in the bucket for a certain year
+        """
+        return [h.key for h in self.list_today_raw_histories()]
+
     @cached_property
-    def raw_histories_keys_list(self):
+    def raw_histories_keys_list(self) -> list:
         """
         Returns a list of all raw histories keys in the bucket
         """
         return [h.key for h in self.raw_histories_list]
 
     @cached_property
-    def get_raw_histories(self):
+    def get_raw_histories(self) -> list:
         """
         Returns a list of all raw history objects in the bucket
         """
@@ -190,9 +203,7 @@ class S3Downloader:
             raw_histories.append(result_queue.get())
         return raw_histories
 
-
-
-    def get_raw_histories_by_year(self, year):
+    def get_raw_histories_by_year(self, year: int) -> list:
         threads = []
         result_queue = queue.Queue()
         for key in self.list_raw_histories_keys_by_year(year):
@@ -206,7 +217,7 @@ class S3Downloader:
             raw_histories.append(result_queue.get())
         return raw_histories
 
-    def get_raw_histories_by_month_of_year(self, year, month):
+    def get_raw_histories_by_month_of_year(self, year: int, month: int) -> list:
         """
         Returns a list of  raw history objects in the bucket for a certain month of year
         """
