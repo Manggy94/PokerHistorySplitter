@@ -28,7 +28,7 @@ def get_version():
 
 setup(
     name="pkrhistorysplitter",
-    version="0.0.2",
+    version=get_version(),
     description="A Poker Package to split poker history files in DO S3 bucket",
     long_description=Path("README.md").read_text(),
     long_description_content_type='text/markdown',
